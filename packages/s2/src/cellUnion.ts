@@ -279,10 +279,14 @@ function lowerBound(cu: CellUnion, target: CellID): number {
  * together cover the parent exactly). Assumes a, b, c are sorted and d >= c.
  */
 function areSiblings(a: CellID, b: CellID, c: CellID, d: CellID): boolean {
-  // All must be at the same level.
+  // Quick check: siblings must share the same parent.
+  // parent(x) at level-1 is cheaper than calling level() on each cell.
   const lvl = level(a);
   if (lvl === 0) return false;
-  if (level(b) !== lvl || level(c) !== lvl || level(d) !== lvl) return false;
+
+  // All must have the same lsb (same level) — cheap bigint AND
+  const aLsb = lsb(a);
+  if (lsb(b) !== aLsb || lsb(c) !== aLsb || lsb(d) !== aLsb) return false;
 
   // They must share the same parent.
   const pa = parent(a);

@@ -157,17 +157,56 @@ export function face(id: CellID): number {
  * Returns the subdivision level of the cell (0-30).
  * Level 0 is a face cell; level 30 is a leaf cell.
  */
+/**
+ * Lookup table: trailing zero count for bytes 0-255.
+ * -1 means no set bit in this byte (all zeros).
+ */
+const CTZ_TABLE = new Int8Array(256);
+{
+  CTZ_TABLE[0] = -1;
+  for (let i = 1; i < 256; i++) {
+    CTZ_TABLE[i] = 0;
+    if ((i & 0x01) === 0) CTZ_TABLE[i]!++;
+    if ((i & 0x03) === 0) CTZ_TABLE[i]!++;
+    if ((i & 0x07) === 0) CTZ_TABLE[i]!++;
+    if ((i & 0x0f) === 0) CTZ_TABLE[i]!++;
+    if ((i & 0x1f) === 0) CTZ_TABLE[i]!++;
+    if ((i & 0x3f) === 0) CTZ_TABLE[i]!++;
+    if ((i & 0x7f) === 0) CTZ_TABLE[i]!++;
+  }
+}
+
 export function level(id: CellID): number {
   if (isLeaf(id)) return MAX_LEVEL;
 
-  // Count trailing zeros and divide by 2
-  let tz = 0;
-  let bits: bigint = id;
-
-  if ((bits & 0xffffffffn) === 0n) {
-    bits >>= 32n;
-    tz += 32;
+  // Fast path: extract low 32 bits to Number. If non-zero, we can count
+  // trailing zeros entirely in Number land (10-100x faster than BigInt).
+  const low32 = Number(id & 0xffffffffn);
+  if (low32 !== 0) {
+    // Count trailing zeros in the low 32 bits using byte-level lookup
+    let tz: number;
+    const b0 = low32 & 0xff;
+    if (b0 !== 0) {
+      tz = CTZ_TABLE[b0]!;
+    } else {
+      const b1 = (low32 >>> 8) & 0xff;
+      if (b1 !== 0) {
+        tz = 8 + CTZ_TABLE[b1]!;
+      } else {
+        const b2 = (low32 >>> 16) & 0xff;
+        if (b2 !== 0) {
+          tz = 16 + CTZ_TABLE[b2]!;
+        } else {
+          tz = 24 + CTZ_TABLE[(low32 >>> 24) & 0xff]!;
+        }
+      }
+    }
+    return MAX_LEVEL - (tz >> 1);
   }
+
+  // Slow path: low 32 bits are all zero (level 0-14). Use BigInt.
+  let tz = 32;
+  let bits = id >> 32n;
   if ((bits & 0xffffn) === 0n) {
     bits >>= 16n;
     tz += 16;
@@ -648,14 +687,14 @@ export function allNeighbors(id: CellID, nbrLevel: number): readonly CellID[] {
   const lvl = level(id);
 
   const result: CellID[] = [];
-  const seen = new Set<string>();
-  const selfToken = toToken(parentAtLevel(id, nbrLevel));
+  const seen = new Set<bigint>();
+  const selfId = parentAtLevel(id, nbrLevel) as bigint;
 
   function addCell(ci: number, cj: number): void {
     const nbrId = parentAtLevel(cellIDFromFaceIJWrap(f, ci, cj), nbrLevel);
-    const token = toToken(nbrId);
-    if (!seen.has(token) && token !== selfToken) {
-      seen.add(token);
+    const nbrBigint = nbrId as bigint;
+    if (!seen.has(nbrBigint) && nbrBigint !== selfId) {
+      seen.add(nbrBigint);
       result.push(nbrId);
     }
   }

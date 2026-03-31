@@ -8,7 +8,7 @@
  * @module
  */
 
-import { type Vector, cross, dot, norm, angle, isUnit, vector } from "@s2js/r3";
+import { type Vector, cross, dot, angle, isUnit, vector } from "@s2js/r3";
 import { sign, SIGN } from "./predicates.js";
 
 // ---------------------------------------------------------------------------
@@ -231,20 +231,48 @@ export function loopContainsPoint(l: Loop, p: Vector): boolean {
     return v.x === 0 && v.y === 0 && v.z === -1;
   }
 
-  // Compute the winding number by summing the signed angles at p.
-  // For each edge (a, b), compute the signed angle of the arc from a to b
-  // as seen from p.
+  // Compute the winding number by summing signed angles at p.
+  // We carry forward the cross product cross(p, vertex) between iterations
+  // to avoid recomputing it for the shared vertex.
   let windingAngle = 0;
+  const v0 = vertex(l, 0);
+
+  // Precompute first cross(p, v0) as scalars (no allocation)
+  let prevCrossX = p.y * v0.z - p.z * v0.y;
+  let prevCrossY = p.z * v0.x - p.x * v0.z;
+  let prevCrossZ = p.x * v0.y - p.y * v0.x;
 
   for (let i = 0; i < n; i++) {
-    const a = vertex(l, i);
     const b = vertex(l, i + 1);
-    windingAngle += signedAngleAtPoint(p, a, b);
+
+    // cross(p, b) — the "next" cross product (reused as "prev" in next iteration)
+    const pbx = p.y * b.z - p.z * b.y;
+    const pby = p.z * b.x - p.x * b.z;
+    const pbz = p.x * b.y - p.y * b.x;
+
+    // Norms of cross(p, a) and cross(p, b)
+    const paNorm = Math.sqrt(prevCrossX * prevCrossX + prevCrossY * prevCrossY + prevCrossZ * prevCrossZ);
+    const pbNorm = Math.sqrt(pbx * pbx + pby * pby + pbz * pbz);
+
+    if (paNorm > 0 && pbNorm > 0) {
+      const invNorms = 1 / (paNorm * pbNorm);
+      // dot(cross(p,a), cross(p,b))
+      const cosAngle = (prevCrossX * pbx + prevCrossY * pby + prevCrossZ * pbz) * invNorms;
+      // dot(cross(cross(p,a), cross(p,b)), p)
+      const cpx = prevCrossY * pbz - prevCrossZ * pby;
+      const cpy = prevCrossZ * pbx - prevCrossX * pbz;
+      const cpz = prevCrossX * pby - prevCrossY * pbx;
+      const sinAngle = (cpx * p.x + cpy * p.y + cpz * p.z) * invNorms;
+      windingAngle += Math.atan2(sinAngle, cosAngle);
+    }
+
+    // Carry forward: next iteration's "prev" is this iteration's "next"
+    prevCrossX = pbx;
+    prevCrossY = pby;
+    prevCrossZ = pbz;
   }
 
-  // For a CCW-oriented loop, the winding number is +2π for interior points
-  // and -2π for exterior points on the opposite hemisphere.
-  // We check if the winding is positive (> π threshold for numerical stability).
+  // For a CCW-oriented loop, the winding number is +2π for interior points.
   return windingAngle > Math.PI;
 }
 
@@ -333,29 +361,6 @@ function exteriorAngle(prev: Vector, curr: Vector, next: Vector): number {
 
   // atan2 gives the signed angle between n1 and n2 about the curr axis.
   // For a CCW polygon, this is PI - interior_angle, i.e., the exterior angle.
-  return Math.atan2(sinAngle, cosAngle);
-}
-
-/**
- * Returns the signed angle subtended by the arc from a to b as seen from point p.
- *
- * This is the angle at p in the spherical triangle (p, a, b), signed positive
- * if the triangle is counter-clockwise when viewed from outside the sphere.
- */
-function signedAngleAtPoint(p: Vector, a: Vector, b: Vector): number {
-  // Compute the two great circle normals from p
-  const pa = cross(p, a);
-  const pb = cross(p, b);
-
-  const paNorm = norm(pa);
-  const pbNorm = norm(pb);
-
-  if (paNorm === 0 || pbNorm === 0) return 0;
-
-  // The angle between the two great circles through p
-  const cosAngle = dot(pa, pb) / (paNorm * pbNorm);
-  const sinAngle = dot(cross(pa, pb), p) / (paNorm * pbNorm);
-
   return Math.atan2(sinAngle, cosAngle);
 }
 

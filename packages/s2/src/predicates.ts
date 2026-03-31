@@ -25,15 +25,16 @@ export type Sign = (typeof SIGN)[keyof typeof SIGN];
 
 /**
  * Returns the sign of the determinant of the 3x3 matrix [a, b, c].
- * Equivalently, this is the sign of the cross product (a-c) x (b-c) · c.
+ *
+ * Computed as the scalar triple product a · (b × c) without allocating
+ * an intermediate cross product vector.
  *
  * Returns +1 if the points are counter-clockwise, -1 if clockwise,
  * and 0 if they are collinear.
- *
- * This is the fast approximate version using floating-point arithmetic.
  */
 export function sign(a: Vector, b: Vector, c: Vector): Sign {
-  const d = dot(cross(a, b), c);
+  // Inline scalar triple product: a · (b × c)
+  const d = a.x * (b.y * c.z - b.z * c.y) + a.y * (b.z * c.x - b.x * c.z) + a.z * (b.x * c.y - b.y * c.x);
   if (d > 0) return SIGN.COUNTER_CLOCKWISE;
   if (d < 0) return SIGN.CLOCKWISE;
   return SIGN.INDETERMINATE;
