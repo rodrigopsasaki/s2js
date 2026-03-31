@@ -17,8 +17,7 @@
   <a href="#packages">Packages</a> &bull;
   <a href="#quick-start">Quick Start</a> &bull;
   <a href="#why-s2">Why S2</a> &bull;
-  <a href="#api-overview">API Overview</a> &bull;
-  <a href="#cross-validation">Cross-Validation</a>
+  <a href="#api-overview">API Overview</a>
 </p>
 
 ---
@@ -28,7 +27,6 @@
 - **Pure TypeScript** &mdash; no native bindings, no compilation step. Works in Node.js, Deno, Bun, browsers, and edge runtimes.
 - **Full S2 API** &mdash; CellID, CellUnion, Cap, LatLngRect, Loop, Polygon, RegionCoverer, spatial queries, boolean operations, convex hull.
 - **CellID as `bigint`** &mdash; full 64-bit precision for all bit operations (parent, children, level, contains).
-- **Cross-validated** &mdash; golden test vectors generated from the canonical C++ S2 implementation ensure exact match on tokens, faces, levels, and coordinates.
 - **Zero runtime dependencies.**
 - **Strict TypeScript** &mdash; branded types for `Angle`, `ChordAngle`, and `CellID` prevent mixing representations at compile time.
 
@@ -225,29 +223,6 @@ polygonDifferenceApprox(a, b);
 
 // Convex hull
 convexHull(points);
-```
-
-## Cross-Validation
-
-This library includes golden test vectors generated from the canonical C++ S2 implementation (via Python `s2sphere`). Every major operation is cross-validated:
-
-- **CellID tokens** for 16 cities worldwide &mdash; exact match
-- **Face, level, containment** for ancestor/descendant chains &mdash; exact match
-- **Parent/children** hierarchies for all 6 faces &mdash; exact match
-- **Coordinate conversions** (stToUV, uvToST) &mdash; exact match to 14 decimal places
-- **Cap area and containment** &mdash; exact match to 10 decimal places
-- **Earth distance conversions** &mdash; exact match to 14 decimal places
-
-Run the golden tests:
-
-```bash
-pnpm test
-```
-
-Regenerate golden vectors (requires Python + s2sphere):
-
-```bash
-cd golden && python3 generate.py > vectors.json
 ```
 
 ## Development
