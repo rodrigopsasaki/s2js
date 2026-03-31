@@ -58,70 +58,136 @@ The dependency graph mirrors the Go library exactly:
 npm install @s2js/s2 @s2js/earth
 ```
 
-### Convert a location to an S2 cell token
+### CellID basics
 
-```typescript
-import { cellIDFromLatLng, toToken, face, level, parentAtLevel } from "@s2js/s2";
+<embedex source="examples/cellIdBasics.ts">
 
-// San Francisco (lat/lng in radians)
-const lat = (37.7749 * Math.PI) / 180;
-const lng = (-122.4194 * Math.PI) / 180;
+```ts
 
-const cellId = cellIDFromLatLng(lat, lng);
-
-console.log(toToken(cellId)); // "808fb094" (leaf cell token)
-console.log(face(cellId)); // 4
-console.log(level(cellId)); // 30 (leaf)
-
-// Get the level-10 parent (~10km resolution)
-const coarse = parentAtLevel(cellId, 10);
-console.log(toToken(coarse)); // "808fb"
-```
-
-### Check if a location is within a region
-
-```typescript
-import { cellIDFromLatLng, contains, parentAtLevel } from "@s2js/s2";
-
-const regionCell = parentAtLevel(cellIDFromLatLng(0.659, -2.136), 12);
-const pointCell = cellIDFromLatLng(0.659, -2.136);
-
-console.log(contains(regionCell, pointCell)); // true — this is the elegant property
-```
-
-### Cover a region with cells
-
-```typescript
 import {
-  cellIDFromLatLng,
+  cellIDFromLatLngDegrees,
+  toToken,
+  face,
+  level,
   parentAtLevel,
   contains,
   children,
-  type Region,
-  type CellID,
-  covering,
-  level as cellLevel,
+  toLatLngDegrees,
 } from "@s2js/s2";
 
-// Define a region around a cell
-const target = parentAtLevel(cellIDFromLatLng(0.659, -2.136), 8);
+// San Francisco
+const cellId = cellIDFromLatLngDegrees(37.7749, -122.4194);
+
+console.log(toToken(cellId)); // leaf cell token
+console.log(face(cellId)); // 4
+console.log(level(cellId)); // 30 (leaf)
+
+// Navigate the hierarchy
+const level10 = parentAtLevel(cellId, 10);
+console.log(toToken(level10)); // coarser ~10km cell
+
+// The elegant property: containment is a prefix check
+console.log(contains(level10, cellId)); // true
+
+// Get the 4 children of a cell
+const kids = children(level10);
+console.log(kids.length); // 4
+
+// Convert back to lat/lng
+const center = toLatLngDegrees(level10);
+console.log(center.lat, center.lng); // degrees
+```
+
+</embedex>
+
+### Spatial containment
+
+<embedex source="examples/spatialContainment.ts">
+
+```ts
+
+import { cellIDFromLatLngDegrees, contains, parentAtLevel, toToken } from "@s2js/s2";
+
+// Two locations in San Francisco
+const mission = cellIDFromLatLngDegrees(37.7599, -122.4148);
+const soma = cellIDFromLatLngDegrees(37.7785, -122.3892);
+
+// At leaf level (level 30), they are distinct cells
+console.log(contains(mission, soma)); // false
+
+// At level 13 (~1km), they are in different cells
+const missionL13 = parentAtLevel(mission, 13);
+const somaL13 = parentAtLevel(soma, 13);
+console.log(toToken(missionL13) === toToken(somaL13)); // false
+
+// At level 9 (~20km), they are in the SAME cell
+const missionL9 = parentAtLevel(mission, 9);
+const somaL9 = parentAtLevel(soma, 9);
+console.log(toToken(missionL9) === toToken(somaL9)); // true
+
+// Containment: the coarse cell contains both fine cells
+console.log(contains(missionL9, mission)); // true
+console.log(contains(missionL9, soma)); // true
+```
+
+</embedex>
+
+### Region covering
+
+<embedex source="examples/regionCovering.ts">
+
+```ts
+
+import {
+  cellIDFromLatLngDegrees,
+  parentAtLevel,
+  contains,
+  covering,
+  level,
+  toToken,
+  type Region,
+  type CellID,
+} from "@s2js/s2";
+
+// Define a region as a level-8 cell (~20km) around Tokyo
+const target = parentAtLevel(cellIDFromLatLngDegrees(35.6762, 139.6503), 8);
+
 const region: Region = {
   containsCell: (id: CellID) => contains(target, id),
   mayIntersect: (id: CellID) => contains(target, id) || contains(id, target),
 };
 
+// Cover the region with at most 8 cells at level 10
 const cells = covering(region, { maxCells: 8, maxLevel: 10 });
-console.log(cells.length, "cells in covering");
+
+for (const cell of cells) {
+  console.log(toToken(cell), "level", level(cell));
+}
 ```
 
-### Compute real-world distances
+</embedex>
 
-```typescript
-import { kmToAngle, angleToKm } from "@s2js/earth";
+### Earth distances
 
-const angle = kmToAngle(100); // 100km → angle in radians
-console.log(angleToKm(angle)); // 100
+<embedex source="examples/earthDistances.ts">
+
+```ts
+
+import { kmToAngle, angleToKm, mToAngle, angleToM, EARTH_RADIUS_KM } from "@s2js/earth";
+
+// Convert distances to angles and back
+const angle100km = kmToAngle(100);
+console.log(angleToKm(angle100km)); // 100
+
+const angle500m = mToAngle(500);
+console.log(angleToM(angle500m)); // 500
+
+// Earth's circumference
+const circumference = 2 * Math.PI * EARTH_RADIUS_KM;
+console.log(`${circumference.toFixed(0)} km`); // ~40030 km
 ```
+
+</embedex>
 
 ## Why S2
 
