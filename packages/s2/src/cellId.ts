@@ -543,10 +543,23 @@ export function cellIDFromPoint(x: number, y: number, z: number): CellID {
  * @param lngRadians - Longitude in radians
  */
 export function cellIDFromLatLng(latRadians: number, lngRadians: number): CellID {
-  const phi = latRadians;
-  const theta = lngRadians;
-  const cosPhi = Math.cos(phi);
-  return cellIDFromPoint(cosPhi * Math.cos(theta), cosPhi * Math.sin(theta), Math.sin(phi));
+  const cosPhi = Math.cos(latRadians);
+  return cellIDFromPoint(cosPhi * Math.cos(lngRadians), cosPhi * Math.sin(lngRadians), Math.sin(latRadians));
+}
+
+/** Degrees-to-radians conversion factor. */
+const DEG_TO_RAD = Math.PI / 180;
+
+/**
+ * Creates a leaf CellID from latitude and longitude in degrees.
+ *
+ * This is the most convenient entry point for geographic coordinates.
+ *
+ * @param latDegrees - Latitude in degrees (-90 to 90)
+ * @param lngDegrees - Longitude in degrees (-180 to 180)
+ */
+export function cellIDFromLatLngDegrees(latDegrees: number, lngDegrees: number): CellID {
+  return cellIDFromLatLng(latDegrees * DEG_TO_RAD, lngDegrees * DEG_TO_RAD);
 }
 
 /**
@@ -580,6 +593,20 @@ export function toLatLng(id: CellID): { lat: number; lng: number } {
     lat: Math.atan2(p.z, Math.sqrt(p.x * p.x + p.y * p.y)),
     lng: Math.atan2(p.y, p.x),
   };
+}
+
+/** Radians-to-degrees conversion factor. */
+const RAD_TO_DEG = 180 / Math.PI;
+
+/**
+ * Returns the center of the cell as latitude and longitude in degrees.
+ *
+ * @param id - The CellID to convert
+ * @returns An object with `lat` and `lng` in degrees
+ */
+export function toLatLngDegrees(id: CellID): { lat: number; lng: number } {
+  const ll = toLatLng(id);
+  return { lat: ll.lat * RAD_TO_DEG, lng: ll.lng * RAD_TO_DEG };
 }
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,16 @@
+{
+  "name": "@s2js/examples",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@s2js/s2": "workspace:*",
+    "@s2js/earth": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}
