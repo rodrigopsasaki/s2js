@@ -291,146 +291,56 @@
       {
         "parentToken": "1",
         "parentLevel": 0,
-        "childTokens": [
-          "04",
-          "0c",
-          "14",
-          "1c"
-        ],
-        "childLevels": [
-          1,
-          1,
-          1,
-          1
-        ]
+        "childTokens": ["04", "0c", "14", "1c"],
+        "childLevels": [1, 1, 1, 1]
       },
       {
         "parentToken": "3",
         "parentLevel": 0,
-        "childTokens": [
-          "24",
-          "2c",
-          "34",
-          "3c"
-        ],
-        "childLevels": [
-          1,
-          1,
-          1,
-          1
-        ]
+        "childTokens": ["24", "2c", "34", "3c"],
+        "childLevels": [1, 1, 1, 1]
       },
       {
         "parentToken": "5",
         "parentLevel": 0,
-        "childTokens": [
-          "44",
-          "4c",
-          "54",
-          "5c"
-        ],
-        "childLevels": [
-          1,
-          1,
-          1,
-          1
-        ]
+        "childTokens": ["44", "4c", "54", "5c"],
+        "childLevels": [1, 1, 1, 1]
       },
       {
         "parentToken": "7",
         "parentLevel": 0,
-        "childTokens": [
-          "64",
-          "6c",
-          "74",
-          "7c"
-        ],
-        "childLevels": [
-          1,
-          1,
-          1,
-          1
-        ]
+        "childTokens": ["64", "6c", "74", "7c"],
+        "childLevels": [1, 1, 1, 1]
       },
       {
         "parentToken": "9",
         "parentLevel": 0,
-        "childTokens": [
-          "84",
-          "8c",
-          "94",
-          "9c"
-        ],
-        "childLevels": [
-          1,
-          1,
-          1,
-          1
-        ]
+        "childTokens": ["84", "8c", "94", "9c"],
+        "childLevels": [1, 1, 1, 1]
       },
       {
         "parentToken": "b",
         "parentLevel": 0,
-        "childTokens": [
-          "a4",
-          "ac",
-          "b4",
-          "bc"
-        ],
-        "childLevels": [
-          1,
-          1,
-          1,
-          1
-        ]
+        "childTokens": ["a4", "ac", "b4", "bc"],
+        "childLevels": [1, 1, 1, 1]
       },
       {
         "parentToken": "89c4",
         "parentLevel": 5,
-        "childTokens": [
-          "89c1",
-          "89c3",
-          "89c5",
-          "89c7"
-        ],
-        "childLevels": [
-          6,
-          6,
-          6,
-          6
-        ]
+        "childTokens": ["89c1", "89c3", "89c5", "89c7"],
+        "childLevels": [6, 6, 6, 6]
       },
       {
         "parentToken": "89c25b",
         "parentLevel": 10,
-        "childTokens": [
-          "89c25a4",
-          "89c25ac",
-          "89c25b4",
-          "89c25bc"
-        ],
-        "childLevels": [
-          11,
-          11,
-          11,
-          11
-        ]
+        "childTokens": ["89c25a4", "89c25ac", "89c25b4", "89c25bc"],
+        "childLevels": [11, 11, 11, 11]
       },
       {
         "parentToken": "89c25a224",
         "parentLevel": 15,
-        "childTokens": [
-          "89c25a221",
-          "89c25a223",
-          "89c25a225",
-          "89c25a227"
-        ],
-        "childLevels": [
-          16,
-          16,
-          16,
-          16
-        ]
+        "childTokens": ["89c25a221", "89c25a223", "89c25a225", "89c25a227"],
+        "childLevels": [16, 16, 16, 16]
       }
     ],
     "contains": [
@@ -549,82 +459,42 @@
       {
         "token": "1",
         "level": 0,
-        "neighborTokens": [
-          "b",
-          "3",
-          "5",
-          "9"
-        ]
+        "neighborTokens": ["b", "3", "5", "9"]
       },
       {
         "token": "3",
         "level": 0,
-        "neighborTokens": [
-          "b",
-          "7",
-          "5",
-          "1"
-        ]
+        "neighborTokens": ["b", "7", "5", "1"]
       },
       {
         "token": "5",
         "level": 0,
-        "neighborTokens": [
-          "3",
-          "7",
-          "9",
-          "1"
-        ]
+        "neighborTokens": ["3", "7", "9", "1"]
       },
       {
         "token": "7",
         "level": 0,
-        "neighborTokens": [
-          "3",
-          "b",
-          "9",
-          "5"
-        ]
+        "neighborTokens": ["3", "b", "9", "5"]
       },
       {
         "token": "9",
         "level": 0,
-        "neighborTokens": [
-          "7",
-          "b",
-          "1",
-          "5"
-        ]
+        "neighborTokens": ["7", "b", "1", "5"]
       },
       {
         "token": "b",
         "level": 0,
-        "neighborTokens": [
-          "7",
-          "3",
-          "1",
-          "9"
-        ]
+        "neighborTokens": ["7", "3", "1", "9"]
       },
       {
         "token": "808581",
         "level": 10,
-        "neighborTokens": [
-          "808587",
-          "808f7f",
-          "80857f",
-          "808583"
-        ]
+        "neighborTokens": ["808587", "808f7f", "80857f", "808583"]
       },
       {
         "token": "100001",
         "level": 10,
-        "neighborTokens": [
-          "1aaaab",
-          "100007",
-          "100003",
-          "0fffff"
-        ]
+        "neighborTokens": ["1aaaab", "100007", "100003", "0fffff"]
       }
     ],
     "toPoint": [
@@ -725,8 +595,8 @@
         "token": "1000000000000001",
         "latRad": 6.20881716410319e-10,
         "lngRad": 6.20881716410319e-10,
-        "latDeg": 3.557390192714975e-08,
-        "lngDeg": 3.557390192714975e-08
+        "latDeg": 3.557390192714975e-8,
+        "lngDeg": 3.557390192714975e-8
       },
       {
         "token": "6b12ae3ff6290055",
@@ -840,35 +710,18 @@
   "cellUnion": {
     "normalize": [
       {
-        "input": [
-          "04",
-          "0c",
-          "14",
-          "1c"
-        ],
-        "output": [
-          "1"
-        ],
+        "input": ["04", "0c", "14", "1c"],
+        "output": ["1"],
         "description": "four siblings merge to parent"
       },
       {
-        "input": [
-          "1000000000000001",
-          "1000000000000001"
-        ],
-        "output": [
-          "1000000000000001"
-        ],
+        "input": ["1000000000000001", "1000000000000001"],
+        "output": ["1000000000000001"],
         "description": "duplicates are removed"
       },
       {
-        "input": [
-          "100000004",
-          "1000000000000001"
-        ],
-        "output": [
-          "100000004"
-        ],
+        "input": ["100000004", "1000000000000001"],
+        "output": ["100000004"],
         "description": "parent subsumes child"
       }
     ]
@@ -1044,11 +897,11 @@
       },
       {
         "m": 1,
-        "angle": 1.5696098420815538e-07
+        "angle": 1.5696098420815538e-7
       },
       {
         "m": 100,
-        "angle": 1.5696098420815538e-05
+        "angle": 1.5696098420815538e-5
       },
       {
         "m": 1000,
