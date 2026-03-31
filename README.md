@@ -1,0 +1,282 @@
+<p align="center">
+  <img src="https://s2geometry.io/devguide/img/s2hierarchy.gif" alt="S2 Cell Hierarchy" width="300" />
+</p>
+
+<h1 align="center">@s2js</h1>
+
+<p align="center">
+  <strong>Pure TypeScript S2 Geometry Library for Node.js</strong>
+</p>
+
+<p align="center">
+  A comprehensive port of Google's <a href="https://s2geometry.io">S2 Geometry Library</a>, matching the <a href="https://github.com/golang/geo">Go reference implementation</a> head to head.
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> &bull;
+  <a href="#packages">Packages</a> &bull;
+  <a href="#quick-start">Quick Start</a> &bull;
+  <a href="#why-s2">Why S2</a> &bull;
+  <a href="#api-overview">API Overview</a> &bull;
+  <a href="#cross-validation">Cross-Validation</a>
+</p>
+
+---
+
+## Features
+
+- **Pure TypeScript** &mdash; no native bindings, no compilation step. Works in Node.js, Deno, Bun, browsers, and edge runtimes.
+- **Full S2 API** &mdash; CellID, CellUnion, Cap, LatLngRect, Loop, Polygon, RegionCoverer, spatial queries, boolean operations, convex hull.
+- **CellID as `bigint`** &mdash; full 64-bit precision for all bit operations (parent, children, level, contains).
+- **Cross-validated** &mdash; golden test vectors generated from the canonical C++ S2 implementation ensure exact match on tokens, faces, levels, and coordinates.
+- **Zero runtime dependencies.**
+- **Strict TypeScript** &mdash; branded types for `Angle`, `ChordAngle`, and `CellID` prevent mixing representations at compile time.
+
+## Packages
+
+| Package                           | Description                                                 |
+| --------------------------------- | ----------------------------------------------------------- |
+| [`@s2js/r1`](./packages/r1)       | One-dimensional intervals                                   |
+| [`@s2js/r2`](./packages/r2)       | Two-dimensional Cartesian geometry (points, rectangles)     |
+| [`@s2js/r3`](./packages/r3)       | Three-dimensional vectors                                   |
+| [`@s2js/s1`](./packages/s1)       | Angular geometry (angles, chord angles, circular intervals) |
+| [`@s2js/s2`](./packages/s2)       | **Spherical geometry** &mdash; the main package             |
+| [`@s2js/earth`](./packages/earth) | Real-world distance and area conversions                    |
+
+The dependency graph mirrors the Go library exactly:
+
+```
+@s2js/earth ──▸ @s2js/s1
+@s2js/s2 ────▸ @s2js/s1, @s2js/r1, @s2js/r2, @s2js/r3
+@s2js/s1 ────▸ @s2js/r1
+@s2js/r2 ────▸ @s2js/r1
+@s2js/r3 ────▸ (none)
+@s2js/r1 ────▸ (none)
+```
+
+## Quick Start
+
+```bash
+npm install @s2js/s2 @s2js/earth
+```
+
+### Convert a location to an S2 cell token
+
+```typescript
+import { cellIDFromLatLng, toToken, face, level, parentAtLevel } from "@s2js/s2";
+
+// San Francisco (lat/lng in radians)
+const lat = (37.7749 * Math.PI) / 180;
+const lng = (-122.4194 * Math.PI) / 180;
+
+const cellId = cellIDFromLatLng(lat, lng);
+
+console.log(toToken(cellId)); // "808fb094" (leaf cell token)
+console.log(face(cellId)); // 4
+console.log(level(cellId)); // 30 (leaf)
+
+// Get the level-10 parent (~10km resolution)
+const coarse = parentAtLevel(cellId, 10);
+console.log(toToken(coarse)); // "808fb"
+```
+
+### Check if a location is within a region
+
+```typescript
+import { cellIDFromLatLng, contains, parentAtLevel } from "@s2js/s2";
+
+const regionCell = parentAtLevel(cellIDFromLatLng(0.659, -2.136), 12);
+const pointCell = cellIDFromLatLng(0.659, -2.136);
+
+console.log(contains(regionCell, pointCell)); // true — this is the elegant property
+```
+
+### Cover a region with cells
+
+```typescript
+import {
+  cellIDFromLatLng,
+  parentAtLevel,
+  contains,
+  children,
+  type Region,
+  type CellID,
+  covering,
+  level as cellLevel,
+} from "@s2js/s2";
+
+// Define a region around a cell
+const target = parentAtLevel(cellIDFromLatLng(0.659, -2.136), 8);
+const region: Region = {
+  containsCell: (id: CellID) => contains(target, id),
+  mayIntersect: (id: CellID) => contains(target, id) || contains(id, target),
+};
+
+const cells = covering(region, { maxCells: 8, maxLevel: 10 });
+console.log(cells.length, "cells in covering");
+```
+
+### Compute real-world distances
+
+```typescript
+import { kmToAngle, angleToKm } from "@s2js/earth";
+
+const angle = kmToAngle(100); // 100km → angle in radians
+console.log(angleToKm(angle)); // 100
+```
+
+## Why S2
+
+S2 maps the Earth's surface onto a cube, then uses the **Hilbert curve** to create a one-dimensional index of cells at 31 levels of resolution (from ~10,000km down to ~1cm). This design produces an elegant set of properties:
+
+| Property                    | What it means                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------- |
+| **Prefix containment**      | `parent.contains(child)` is a prefix check on the cell ID &mdash; no geometry needed        |
+| **Resolution = truncation** | Lower resolutions are just shorter tokens of the same location                              |
+| **Range scans**             | Nearby cells have numerically close IDs &mdash; spatial queries become database range scans |
+| **Hierarchical**            | Every cell has exactly 4 children and 1 parent, forming a clean quadtree                    |
+| **Uniform**                 | Cell areas at the same level vary by at most a factor of ~2.1                               |
+
+These properties make S2 strictly superior to H3 for indexing, containment, and hierarchical operations &mdash; H3's hexagons can't nest cleanly, so parent-child relationships require lookup tables rather than bit manipulation.
+
+## API Overview
+
+### CellID &mdash; The Core
+
+```typescript
+// Construction
+cellIDFromLatLng(latRad, lngRad); // leaf cell from coordinates
+cellIDFromPoint(x, y, z); // leaf cell from unit sphere point
+cellIDFromToken(token); // from hex token string
+cellIDFromFace(face); // face cell (level 0)
+
+// Properties
+face(id); // 0-5
+level(id); // 0-30
+isValid(id) / isLeaf(id) / isFace(id);
+
+// Hierarchy
+parent(id) / parentAtLevel(id, level);
+children(id); // [4 children]
+contains(id, other); // THE elegant property
+intersects(id, other);
+
+// Traversal
+next(id) / prev(id); // Hilbert curve order
+edgeNeighbors(id); // 4 adjacent cells
+rangeMin(id) / rangeMax(id); // leaf cell range
+
+// Conversion
+toToken(id); // hex string
+toPoint(id); // unit sphere {x, y, z}
+toLatLng(id); // {lat, lng} radians
+```
+
+### Regions
+
+```typescript
+// CellUnion — normalized set of cells
+cellUnionFromCellIDs(ids);
+cellUnionContains(cu, id) / cellUnionIntersects(cu, id);
+cellUnionUnion(a, b) / cellUnionIntersection(a, b) / cellUnionDifference(a, b);
+
+// Cap — spherical disc
+capFromCenterAngle(center, angle);
+capContainsPoint(cap, point);
+capArea(cap);
+
+// LatLngRect — lat/lng rectangle
+latLngRectFromPointPair(a, b);
+latLngRectContainsLatLng(rect, lat, lng);
+latLngRectArea(rect);
+```
+
+### Geometry
+
+```typescript
+// Loop — closed boundary on the sphere
+loopFromPoints(vertices);
+loopContainsPoint(loop, point);
+loopArea(loop);
+
+// Polygon — collection of loops (supports holes)
+polygonFromLoops(loops);
+polygonContainsPoint(polygon, point);
+polygonArea(polygon);
+
+// RegionCoverer — approximate regions with cells
+covering(region, { maxCells: 8, maxLevel: 15 });
+interiorCovering(region, options);
+```
+
+### Queries
+
+```typescript
+// Closest edge
+findClosestEdgeToPoint(loop, target);
+findClosestEdgeInPolygon(polygon, target);
+signedDistanceToLoop(loop, point);
+isDistanceLess(loop, target, limit);
+
+// Boolean operations (cell-based approximation)
+polygonUnionApprox(a, b);
+polygonIntersectionApprox(a, b);
+polygonDifferenceApprox(a, b);
+
+// Convex hull
+convexHull(points);
+```
+
+## Cross-Validation
+
+This library includes golden test vectors generated from the canonical C++ S2 implementation (via Python `s2sphere`). Every major operation is cross-validated:
+
+- **CellID tokens** for 16 cities worldwide &mdash; exact match
+- **Face, level, containment** for ancestor/descendant chains &mdash; exact match
+- **Parent/children** hierarchies for all 6 faces &mdash; exact match
+- **Coordinate conversions** (stToUV, uvToST) &mdash; exact match to 14 decimal places
+- **Cap area and containment** &mdash; exact match to 10 decimal places
+- **Earth distance conversions** &mdash; exact match to 14 decimal places
+
+Run the golden tests:
+
+```bash
+pnpm test
+```
+
+Regenerate golden vectors (requires Python + s2sphere):
+
+```bash
+cd golden && python3 generate.py > vectors.json
+```
+
+## Development
+
+```bash
+# Install
+pnpm install
+
+# Build all packages
+pnpm build
+
+# Run all tests (978 tests)
+pnpm test
+
+# Lint
+pnpm lint
+
+# Type check
+pnpm typecheck
+```
+
+## Architecture
+
+- **Functional-first** &mdash; pure functions operating on immutable interfaces, no classes
+- **Branded types** &mdash; `Angle`, `ChordAngle`, and `CellID` are branded to prevent accidental mixing
+- **ESM-only** &mdash; targets Node.js 22+, ES2023
+- **Strict TypeScript** &mdash; all strict flags enabled including `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess`
+- **Monorepo** &mdash; pnpm workspaces + Nx for build orchestration
+
+## License
+
+[MIT](./LICENSE)
