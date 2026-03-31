@@ -27,6 +27,13 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "pnpm"
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install s2sphere
+      - run: python3 golden/generate.py > golden/vectors.json
+
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm lint

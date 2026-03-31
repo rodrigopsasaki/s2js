@@ -4,3 +4,4 @@ coverage/
 .nx/
 *.tsbuildinfo
 .DS_Store
+golden/vectors.json
