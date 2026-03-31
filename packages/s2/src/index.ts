@@ -1,6 +1,7 @@
 export {
   type CellID,
   type FaceIJ,
+  allNeighbors,
   cellIDFromFace,
   cellIDFromFaceIJ,
   cellIDFromFacePosLevel,

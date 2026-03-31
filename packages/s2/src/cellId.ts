@@ -633,6 +633,60 @@ export function edgeNeighbors(id: CellID): readonly [CellID, CellID, CellID, Cel
   ];
 }
 
+/**
+ * Returns all neighbors of this cell at the given level.
+ *
+ * This includes the 4 edge neighbors plus the diagonal (vertex) neighbors,
+ * giving the full ring of cells surrounding this cell. Handles face
+ * boundary transitions correctly.
+ *
+ * @param id - The CellID whose neighbors to find
+ * @param nbrLevel - The level at which to return neighbors
+ */
+export function allNeighbors(id: CellID, nbrLevel: number): readonly CellID[] {
+  const { face: f, i, j } = faceIJFromCellID(id);
+  const lvl = level(id);
+
+  const result: CellID[] = [];
+  const seen = new Set<string>();
+  const selfToken = toToken(parentAtLevel(id, nbrLevel));
+
+  function addCell(ci: number, cj: number): void {
+    const nbrId = parentAtLevel(cellIDFromFaceIJWrap(f, ci, cj), nbrLevel);
+    const token = toToken(nbrId);
+    if (!seen.has(token) && token !== selfToken) {
+      seen.add(token);
+      result.push(nbrId);
+    }
+  }
+
+  // Size of the current cell and neighbor cell in IJ coordinates.
+  const mySize = sizeIJ(lvl);
+  const nbrSize = sizeIJ(nbrLevel);
+
+  // Walk a grid of neighbor-level cells around the boundary.
+  // We need to cover the full perimeter: one cell width outside each edge.
+  const iMin = i - mySize / 2;
+  const jMin = j - mySize / 2;
+  const iMax = i + mySize / 2;
+  const jMax = j + mySize / 2;
+
+  // Bottom edge (j = jMin - nbrSize) and top edge (j = jMax)
+  for (let ci = iMin - nbrSize; ci <= iMax; ci += nbrSize) {
+    addCell(ci, jMin - nbrSize);
+    addCell(ci, jMax);
+  }
+
+  // Left edge (i = iMin - nbrSize) and right edge (i = iMax)
+  // Skip corners already covered above.
+  for (let cj = jMin; cj < jMax; cj += nbrSize) {
+    addCell(iMin - nbrSize, cj);
+    addCell(iMax, cj);
+  }
+
+  return result;
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers for edge neighbors
 // ---------------------------------------------------------------------------

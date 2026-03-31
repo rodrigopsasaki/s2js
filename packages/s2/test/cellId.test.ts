@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  allNeighbors,
   cellIDFromFace,
   cellIDFromFacePosLevel,
   cellIDFromLatLng,
@@ -351,6 +352,46 @@ describe("s2.CellID", () => {
 
       for (const n of neighbors) {
         expect(isFace(n)).toBe(true);
+      }
+    });
+  });
+
+  describe("allNeighbors", () => {
+    it("should return more neighbors than edgeNeighbors", () => {
+      const id = cellIDFromFacePosLevel(0, 0n, 10);
+      const edge = edgeNeighbors(id);
+      const all = allNeighbors(id, 10);
+
+      expect(all.length).toBeGreaterThan(edge.length);
+    });
+
+    it("should return valid cells at the requested level", () => {
+      const id = cellIDFromFacePosLevel(2, 0n, 10);
+      const all = allNeighbors(id, 10);
+
+      for (const n of all) {
+        expect(isValid(n)).toBe(true);
+        expect(level(n)).toBe(10);
+      }
+    });
+
+    it("should not include the cell itself", () => {
+      const id = cellIDFromFacePosLevel(1, 0n, 10);
+      const all = allNeighbors(id, 10);
+
+      for (const n of all) {
+        expect(n).not.toBe(id);
+      }
+    });
+
+    it("should include all edge neighbors", () => {
+      const id = cellIDFromFacePosLevel(0, 0n, 15);
+      const edge = edgeNeighbors(id);
+      const all = allNeighbors(id, 15);
+      const allTokens = new Set(all.map((c) => toToken(c)));
+
+      for (const e of edge) {
+        expect(allTokens.has(toToken(e))).toBe(true);
       }
     });
   });
