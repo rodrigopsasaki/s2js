@@ -80,14 +80,21 @@ describe("booleanOperation", () => {
       expect(cellUnionContainsCellUnion(union, intersection)).toBe(true);
     });
 
-    it("should have fewer or equal cells compared to the union", () => {
+    it("should be contained within each polygon's individual covering", () => {
       const a = makeNorthTriangle();
       const b = makeOverlappingTriangle();
 
+      // coverA/coverB = the covering of each polygon individually.
+      // The intersection of two coverings must be a subset of each input covering.
+      // (Cell-count comparison is not a valid invariant: normalize() can merge the
+      // union into fewer, larger ancestor cells while the intersection retains many
+      // small common cells — all of which are still contained within those ancestors.)
+      const coverA = polygonUnionApprox(a, a, maxLevel);
+      const coverB = polygonUnionApprox(b, b, maxLevel);
       const intersection = polygonIntersectionApprox(a, b, maxLevel);
-      const union = polygonUnionApprox(a, b, maxLevel);
 
-      expect(intersection.length).toBeLessThanOrEqual(union.length);
+      expect(cellUnionContainsCellUnion(coverA, intersection)).toBe(true);
+      expect(cellUnionContainsCellUnion(coverB, intersection)).toBe(true);
     });
   });
 

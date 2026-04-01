@@ -106,15 +106,24 @@ function greatCircleDistance2(a: Vector, b: Vector): number {
 
 /**
  * Removes duplicate points from the input array.
+ * Sorts by (x, y, z) then sweeps for adjacent duplicates: O(n log n) vs O(n²).
  *
  * @param points - The points to deduplicate
  */
 function deduplicatePoints(points: readonly Vector[]): Vector[] {
-  const result: Vector[] = [];
-  for (const p of points) {
-    const isDuplicate = result.some((r) => r.x === p.x && r.y === p.y && r.z === p.z);
-    if (!isDuplicate) {
-      result.push(p);
+  const sorted = [...points].sort((a, b) => {
+    if (a.x !== b.x) return a.x < b.x ? -1 : 1;
+    if (a.y !== b.y) return a.y < b.y ? -1 : 1;
+    if (a.z !== b.z) return a.z < b.z ? -1 : 1;
+    return 0;
+  });
+
+  const result: Vector[] = [sorted[0]!];
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = result[result.length - 1]!;
+    const curr = sorted[i]!;
+    if (curr.x !== prev.x || curr.y !== prev.y || curr.z !== prev.z) {
+      result.push(curr);
     }
   }
   return result;
