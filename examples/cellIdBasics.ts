@@ -12,7 +12,7 @@ import {
 } from "@s2js/s2";
 
 // San Francisco
-const cellId = cellIDFromLatLngDegrees(37.7749, -122.4194);
+const cellId = cellIDFromLatLngDegrees({ lat: 37.7749, lng: -122.4194 });
 
 console.log(toToken(cellId)); // leaf cell token
 console.log(face(cellId)); // 4

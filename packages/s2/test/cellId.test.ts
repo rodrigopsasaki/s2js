@@ -246,7 +246,7 @@ describe("s2.CellID", () => {
   describe("cellIDFromLatLng", () => {
     it("should create valid leaf cells for known locations", () => {
       // Equator, prime meridian
-      const id = cellIDFromLatLng(0, 0);
+      const id = cellIDFromLatLng({ lat: 0, lng: 0 });
 
       expect(isValid(id)).toBe(true);
       expect(isLeaf(id)).toBe(true);
@@ -260,7 +260,7 @@ describe("s2.CellID", () => {
       ];
 
       for (const { lat, lng } of testCases) {
-        const id = cellIDFromLatLng(lat, lng);
+        const id = cellIDFromLatLng({ lat: lat, lng: lng });
         const { lat: lat2, lng: lng2 } = toLatLng(id);
 
         // At leaf level, cell center offset is within ~1e-9 radians (~6mm)
@@ -270,8 +270,8 @@ describe("s2.CellID", () => {
     });
 
     it("poles should roundtrip approximately", () => {
-      const north = cellIDFromLatLng(Math.PI / 2, 0);
-      const south = cellIDFromLatLng(-Math.PI / 2, 0);
+      const north = cellIDFromLatLng({ lat: Math.PI / 2, lng: 0 });
+      const south = cellIDFromLatLng({ lat: -Math.PI / 2, lng: 0 });
 
       expect(face(north)).toBe(2);
       expect(face(south)).toBe(5);

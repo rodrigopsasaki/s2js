@@ -72,7 +72,7 @@ class CellRegion implements Region {
 describe("RegionCoverer", () => {
   describe("covering", () => {
     it("should return a single cell at maxLevel for a point region", () => {
-      const leafCell = cellIDFromLatLng(0.1, 0.2);
+      const leafCell = cellIDFromLatLng({ lat: 0.1, lng: 0.2 });
       const region = new PointRegion(leafCell);
 
       const actual = covering(region, { maxCells: 8 });
@@ -82,7 +82,7 @@ describe("RegionCoverer", () => {
     });
 
     it("should return a single cell when maxCells is 1", () => {
-      const leafCell = cellIDFromLatLng(0.5, 1.0);
+      const leafCell = cellIDFromLatLng({ lat: 0.5, lng: 1.0 });
       const region = new PointRegion(leafCell);
 
       const actual = covering(region, { maxCells: 1 });
@@ -93,7 +93,7 @@ describe("RegionCoverer", () => {
     });
 
     it("should only return cells at level >= minLevel", () => {
-      const leafCell = cellIDFromLatLng(0.3, -0.5);
+      const leafCell = cellIDFromLatLng({ lat: 0.3, lng: -0.5 });
       const region = new PointRegion(leafCell);
       const inputMinLevel = 5;
 
@@ -106,7 +106,7 @@ describe("RegionCoverer", () => {
     });
 
     it("should respect maxLevel constraint", () => {
-      const leafCell = cellIDFromLatLng(0.1, 0.2);
+      const leafCell = cellIDFromLatLng({ lat: 0.1, lng: 0.2 });
       const region = new PointRegion(leafCell);
       const inputMaxLevel = 10;
 
@@ -138,7 +138,7 @@ describe("RegionCoverer", () => {
     });
 
     it("should respect levelMod constraint", () => {
-      const leafCell = cellIDFromLatLng(0.1, 0.2);
+      const leafCell = cellIDFromLatLng({ lat: 0.1, lng: 0.2 });
       const region = new PointRegion(leafCell);
       const inputLevelMod = 2;
 
@@ -151,7 +151,7 @@ describe("RegionCoverer", () => {
     });
 
     it("should return cells that collectively contain the target point", () => {
-      const leafCell = cellIDFromLatLng(-0.7, 2.1);
+      const leafCell = cellIDFromLatLng({ lat: -0.7, lng: 2.1 });
       const region = new PointRegion(leafCell);
 
       const actual = covering(region, { maxCells: 4 });
@@ -161,7 +161,7 @@ describe("RegionCoverer", () => {
     });
 
     it("should cover a cell region with the cell itself", () => {
-      const targetCell = parentAtLevel(cellIDFromLatLng(0.5, 0.5), 10);
+      const targetCell = parentAtLevel(cellIDFromLatLng({ lat: 0.5, lng: 0.5 }), 10);
       const region = new CellRegion(targetCell);
 
       const actual = covering(region, { maxCells: 8, maxLevel: 10 });
@@ -171,7 +171,7 @@ describe("RegionCoverer", () => {
     });
 
     it("should handle children of a cell region at deeper levels", () => {
-      const targetCell = parentAtLevel(cellIDFromLatLng(0.5, 0.5), 5);
+      const targetCell = parentAtLevel(cellIDFromLatLng({ lat: 0.5, lng: 0.5 }), 5);
       const region = new CellRegion(targetCell);
 
       const actual = covering(region, { maxCells: 100, minLevel: 6, maxLevel: 6 });
@@ -205,7 +205,7 @@ describe("RegionCoverer", () => {
     });
 
     it("should return an empty result for a point region at maxLevel=0", () => {
-      const leafCell = cellIDFromLatLng(0.1, 0.2);
+      const leafCell = cellIDFromLatLng({ lat: 0.1, lng: 0.2 });
       const region = new PointRegion(leafCell);
 
       const actual = interiorCovering(region, { maxLevel: 0, maxCells: 8 });
@@ -215,7 +215,7 @@ describe("RegionCoverer", () => {
     });
 
     it("should return the leaf cell for a point region at maxLevel=MAX_LEVEL", () => {
-      const leafCell = cellIDFromLatLng(0.1, 0.2);
+      const leafCell = cellIDFromLatLng({ lat: 0.1, lng: 0.2 });
       const region = new PointRegion(leafCell);
 
       const actual = interiorCovering(region, { maxCells: 8 });
@@ -225,7 +225,7 @@ describe("RegionCoverer", () => {
     });
 
     it("should return the parent cell when all 4 children are covered", () => {
-      const targetCell = parentAtLevel(cellIDFromLatLng(0.5, 0.5), 5);
+      const targetCell = parentAtLevel(cellIDFromLatLng({ lat: 0.5, lng: 0.5 }), 5);
       const region = new CellRegion(targetCell);
 
       const actual = interiorCovering(region, { maxCells: 100, minLevel: 6, maxLevel: 6 });
@@ -238,7 +238,7 @@ describe("RegionCoverer", () => {
 
   describe("normalization", () => {
     it("should return a sorted result", () => {
-      const leafCell = cellIDFromLatLng(0.3, 0.7);
+      const leafCell = cellIDFromLatLng({ lat: 0.3, lng: 0.7 });
       const targetCell = parentAtLevel(leafCell, 3);
       const region = new CellRegion(targetCell);
 
@@ -250,7 +250,7 @@ describe("RegionCoverer", () => {
     });
 
     it("should not contain duplicate cells", () => {
-      const leafCell = cellIDFromLatLng(0.1, 0.1);
+      const leafCell = cellIDFromLatLng({ lat: 0.1, lng: 0.1 });
       const region = new PointRegion(leafCell);
 
       const actual = covering(region, { maxCells: 8 });
@@ -262,7 +262,7 @@ describe("RegionCoverer", () => {
 
   describe("edge cases", () => {
     it("should handle minLevel equal to maxLevel", () => {
-      const leafCell = cellIDFromLatLng(0.1, 0.2);
+      const leafCell = cellIDFromLatLng({ lat: 0.1, lng: 0.2 });
       const region = new PointRegion(leafCell);
       const inputLevel = 15;
 
@@ -274,7 +274,7 @@ describe("RegionCoverer", () => {
     });
 
     it("should handle maxCells=0 gracefully", () => {
-      const leafCell = cellIDFromLatLng(0.1, 0.2);
+      const leafCell = cellIDFromLatLng({ lat: 0.1, lng: 0.2 });
       const region = new PointRegion(leafCell);
 
       const actual = covering(region, { maxCells: 0 });

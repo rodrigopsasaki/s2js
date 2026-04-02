@@ -562,6 +562,16 @@ export function faceIJFromCellID(id: CellID): FaceIJ {
 // ---------------------------------------------------------------------------
 
 /**
+ * A geographic coordinate pair.
+ * When used as input to or output from S2 functions, `lat` and `lng` are
+ * in radians unless the function name ends in `Degrees`.
+ */
+export interface LatLng {
+  readonly lat: number;
+  readonly lng: number;
+}
+
+/**
  * Creates a leaf CellID from a point on the unit sphere.
  *
  * @param x - X component of the unit vector
@@ -576,29 +586,27 @@ export function cellIDFromPoint(x: number, y: number, z: number): CellID {
 }
 
 /**
- * Creates a leaf CellID from latitude and longitude in radians.
+ * Creates a leaf CellID from a `{ lat, lng }` coordinate in radians.
  *
- * @param latRadians - Latitude in radians
- * @param lngRadians - Longitude in radians
+ * @param ll - Latitude and longitude in radians
  */
-export function cellIDFromLatLng(latRadians: number, lngRadians: number): CellID {
-  const cosPhi = Math.cos(latRadians);
-  return cellIDFromPoint(cosPhi * Math.cos(lngRadians), cosPhi * Math.sin(lngRadians), Math.sin(latRadians));
+export function cellIDFromLatLng({ lat, lng }: LatLng): CellID {
+  const cosPhi = Math.cos(lat);
+  return cellIDFromPoint(cosPhi * Math.cos(lng), cosPhi * Math.sin(lng), Math.sin(lat));
 }
 
 /** Degrees-to-radians conversion factor. */
 const DEG_TO_RAD = Math.PI / 180;
 
 /**
- * Creates a leaf CellID from latitude and longitude in degrees.
+ * Creates a leaf CellID from a `{ lat, lng }` coordinate in degrees.
  *
  * This is the most convenient entry point for geographic coordinates.
  *
- * @param latDegrees - Latitude in degrees (-90 to 90)
- * @param lngDegrees - Longitude in degrees (-180 to 180)
+ * @param ll - Latitude in degrees (-90 to 90) and longitude in degrees (-180 to 180)
  */
-export function cellIDFromLatLngDegrees(latDegrees: number, lngDegrees: number): CellID {
-  return cellIDFromLatLng(latDegrees * DEG_TO_RAD, lngDegrees * DEG_TO_RAD);
+export function cellIDFromLatLngDegrees({ lat, lng }: LatLng): CellID {
+  return cellIDFromLatLng({ lat: lat * DEG_TO_RAD, lng: lng * DEG_TO_RAD });
 }
 
 /**
@@ -626,7 +634,7 @@ export function toPoint(id: CellID): Vector {
  * @param id - The CellID to convert
  * @returns An object with `lat` and `lng` in radians
  */
-export function toLatLng(id: CellID): { lat: number; lng: number } {
+export function toLatLng(id: CellID): LatLng {
   const p = toPoint(id);
   return {
     lat: Math.atan2(p.z, Math.sqrt(p.x * p.x + p.y * p.y)),
@@ -643,7 +651,7 @@ const RAD_TO_DEG = 180 / Math.PI;
  * @param id - The CellID to convert
  * @returns An object with `lat` and `lng` in degrees
  */
-export function toLatLngDegrees(id: CellID): { lat: number; lng: number } {
+export function toLatLngDegrees(id: CellID): LatLng {
   const ll = toLatLng(id);
   return { lat: ll.lat * RAD_TO_DEG, lng: ll.lng * RAD_TO_DEG };
 }

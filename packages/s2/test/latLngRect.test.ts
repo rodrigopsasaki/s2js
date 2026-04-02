@@ -48,17 +48,17 @@ describe("s2.LatLngRect", () => {
 
   describe("latLngRectFromLatLng", () => {
     it("should create a point rect", () => {
-      const rect = latLngRectFromLatLng(0.5, 1.0);
+      const rect = latLngRectFromLatLng({ lat: 0.5, lng: 1.0 });
 
       expect(isEmptyLatLngRect(rect)).toBe(false);
-      expect(latLngRectContainsLatLng(rect, 0.5, 1.0)).toBe(true);
+      expect(latLngRectContainsLatLng(rect, { lat: 0.5, lng: 1.0 })).toBe(true);
     });
 
     it("should not contain other points", () => {
-      const rect = latLngRectFromLatLng(0.5, 1.0);
+      const rect = latLngRectFromLatLng({ lat: 0.5, lng: 1.0 });
 
-      expect(latLngRectContainsLatLng(rect, 0.6, 1.0)).toBe(false);
-      expect(latLngRectContainsLatLng(rect, 0.5, 1.1)).toBe(false);
+      expect(latLngRectContainsLatLng(rect, { lat: 0.6, lng: 1.0 })).toBe(false);
+      expect(latLngRectContainsLatLng(rect, { lat: 0.5, lng: 1.1 })).toBe(false);
     });
   });
 
@@ -68,9 +68,9 @@ describe("s2.LatLngRect", () => {
       const b = { lat: 0.3, lng: 0.4 };
       const rect = latLngRectFromPointPair(a, b);
 
-      expect(latLngRectContainsLatLng(rect, 0.1, 0.2)).toBe(true);
-      expect(latLngRectContainsLatLng(rect, 0.3, 0.4)).toBe(true);
-      expect(latLngRectContainsLatLng(rect, 0.2, 0.3)).toBe(true);
+      expect(latLngRectContainsLatLng(rect, { lat: 0.1, lng: 0.2 })).toBe(true);
+      expect(latLngRectContainsLatLng(rect, { lat: 0.3, lng: 0.4 })).toBe(true);
+      expect(latLngRectContainsLatLng(rect, { lat: 0.2, lng: 0.3 })).toBe(true);
     });
 
     it("should handle reversed order", () => {
@@ -78,14 +78,14 @@ describe("s2.LatLngRect", () => {
       const b = { lat: 0.1, lng: 0.2 };
       const rect = latLngRectFromPointPair(a, b);
 
-      expect(latLngRectContainsLatLng(rect, 0.2, 0.3)).toBe(true);
+      expect(latLngRectContainsLatLng(rect, { lat: 0.2, lng: 0.3 })).toBe(true);
     });
 
     it("should create a point rect for identical points", () => {
       const p = { lat: 0.5, lng: 1.0 };
       const rect = latLngRectFromPointPair(p, p);
 
-      expect(latLngRectContainsLatLng(rect, 0.5, 1.0)).toBe(true);
+      expect(latLngRectContainsLatLng(rect, { lat: 0.5, lng: 1.0 })).toBe(true);
     });
   });
 
@@ -93,27 +93,27 @@ describe("s2.LatLngRect", () => {
     it("should contain interior points", () => {
       const rect = latLngRectFromPointPair({ lat: 0, lng: 0 }, { lat: 1, lng: 1 });
 
-      expect(latLngRectContainsLatLng(rect, 0.5, 0.5)).toBe(true);
+      expect(latLngRectContainsLatLng(rect, { lat: 0.5, lng: 0.5 })).toBe(true);
     });
 
     it("should contain boundary points", () => {
       const rect = latLngRectFromPointPair({ lat: 0, lng: 0 }, { lat: 1, lng: 1 });
 
-      expect(latLngRectContainsLatLng(rect, 0, 0)).toBe(true);
-      expect(latLngRectContainsLatLng(rect, 1, 1)).toBe(true);
+      expect(latLngRectContainsLatLng(rect, { lat: 0, lng: 0 })).toBe(true);
+      expect(latLngRectContainsLatLng(rect, { lat: 1, lng: 1 })).toBe(true);
     });
 
     it("should not contain points outside", () => {
       const rect = latLngRectFromPointPair({ lat: 0, lng: 0 }, { lat: 1, lng: 1 });
 
-      expect(latLngRectContainsLatLng(rect, -0.1, 0.5)).toBe(false);
-      expect(latLngRectContainsLatLng(rect, 0.5, 1.5)).toBe(false);
+      expect(latLngRectContainsLatLng(rect, { lat: -0.1, lng: 0.5 })).toBe(false);
+      expect(latLngRectContainsLatLng(rect, { lat: 0.5, lng: 1.5 })).toBe(false);
     });
 
     it("full rect should contain any point", () => {
-      expect(latLngRectContainsLatLng(fullLatLngRect(), 0, 0)).toBe(true);
-      expect(latLngRectContainsLatLng(fullLatLngRect(), Math.PI / 2, Math.PI)).toBe(true);
-      expect(latLngRectContainsLatLng(fullLatLngRect(), -Math.PI / 2, -Math.PI)).toBe(true);
+      expect(latLngRectContainsLatLng(fullLatLngRect(), { lat: 0, lng: 0 })).toBe(true);
+      expect(latLngRectContainsLatLng(fullLatLngRect(), { lat: Math.PI / 2, lng: Math.PI })).toBe(true);
+      expect(latLngRectContainsLatLng(fullLatLngRect(), { lat: -Math.PI / 2, lng: -Math.PI })).toBe(true);
     });
   });
 
@@ -173,7 +173,7 @@ describe("s2.LatLngRect", () => {
       const rect = latLngRectFromPointPair({ lat: 0, lng: 0 }, { lat: 1, lng: 1 });
       const result = latLngRectUnion(emptyLatLngRect(), rect);
 
-      expect(latLngRectContainsLatLng(result, 0.5, 0.5)).toBe(true);
+      expect(latLngRectContainsLatLng(result, { lat: 0.5, lng: 0.5 })).toBe(true);
     });
 
     it("should combine two disjoint rects into a larger rect", () => {
@@ -183,7 +183,7 @@ describe("s2.LatLngRect", () => {
 
       // Union should not be empty and should contain both original rects
       expect(isEmptyLatLngRect(result)).toBe(false);
-      expect(latLngRectContainsLatLng(result, 0.05, 0.05)).toBe(true);
+      expect(latLngRectContainsLatLng(result, { lat: 0.05, lng: 0.05 })).toBe(true);
     });
   });
 
@@ -193,8 +193,8 @@ describe("s2.LatLngRect", () => {
       const b = latLngRectFromPointPair({ lat: 0.5, lng: 0.5 }, { lat: 1.5, lng: 1.5 });
       const result = latLngRectIntersection(a, b);
 
-      expect(latLngRectContainsLatLng(result, 0.7, 0.7)).toBe(true);
-      expect(latLngRectContainsLatLng(result, 0.2, 0.2)).toBe(false);
+      expect(latLngRectContainsLatLng(result, { lat: 0.7, lng: 0.7 })).toBe(true);
+      expect(latLngRectContainsLatLng(result, { lat: 0.2, lng: 0.2 })).toBe(false);
     });
 
     it("should return empty for disjoint rects", () => {
@@ -208,18 +208,18 @@ describe("s2.LatLngRect", () => {
 
   describe("latLngRectAddLatLng", () => {
     it("should expand empty rect to point rect", () => {
-      const rect = latLngRectAddLatLng(emptyLatLngRect(), 0.5, 1.0);
+      const rect = latLngRectAddLatLng(emptyLatLngRect(), { lat: 0.5, lng: 1.0 });
 
-      expect(latLngRectContainsLatLng(rect, 0.5, 1.0)).toBe(true);
+      expect(latLngRectContainsLatLng(rect, { lat: 0.5, lng: 1.0 })).toBe(true);
     });
 
     it("should expand to include new point", () => {
-      const rect = latLngRectFromLatLng(0, 0);
-      const expanded = latLngRectAddLatLng(rect, 1, 1);
+      const rect = latLngRectFromLatLng({ lat: 0, lng: 0 });
+      const expanded = latLngRectAddLatLng(rect, { lat: 1, lng: 1 });
 
-      expect(latLngRectContainsLatLng(expanded, 0, 0)).toBe(true);
-      expect(latLngRectContainsLatLng(expanded, 1, 1)).toBe(true);
-      expect(latLngRectContainsLatLng(expanded, 0.5, 0.5)).toBe(true);
+      expect(latLngRectContainsLatLng(expanded, { lat: 0, lng: 0 })).toBe(true);
+      expect(latLngRectContainsLatLng(expanded, { lat: 1, lng: 1 })).toBe(true);
+      expect(latLngRectContainsLatLng(expanded, { lat: 0.5, lng: 0.5 })).toBe(true);
     });
   });
 
@@ -263,8 +263,8 @@ describe("s2.LatLngRect", () => {
       const rect = latLngRectFromPointPair({ lat: 0, lng: 0 }, { lat: 0.5, lng: 0.5 });
       const expanded = latLngRectExpanded(rect, { lat: 0.1, lng: 0.1 });
 
-      expect(latLngRectContainsLatLng(expanded, -0.05, -0.05)).toBe(true);
-      expect(latLngRectContainsLatLng(expanded, 0.55, 0.55)).toBe(true);
+      expect(latLngRectContainsLatLng(expanded, { lat: -0.05, lng: -0.05 })).toBe(true);
+      expect(latLngRectContainsLatLng(expanded, { lat: 0.55, lng: 0.55 })).toBe(true);
     });
 
     it("should clamp latitude to valid range", () => {

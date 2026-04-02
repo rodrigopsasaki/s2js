@@ -47,13 +47,13 @@ console.log("=== @s2js Performance Benchmark ===\n");
 // Precompute test data
 const sfLat = (37.7749 * Math.PI) / 180;
 const sfLng = (-122.4194 * Math.PI) / 180;
-const sfCell = cellIDFromLatLng(sfLat, sfLng);
+const sfCell = cellIDFromLatLng({ lat: sfLat, lng: sfLng });
 const sfL10 = parentAtLevel(sfCell, 10);
 const sfToken = toToken(sfCell);
 
 console.log("--- CellID Operations ---");
-bench("cellIDFromLatLng", () => cellIDFromLatLng(sfLat, sfLng), 100_000);
-bench("cellIDFromLatLngDegrees", () => cellIDFromLatLngDegrees(37.7749, -122.4194), 100_000);
+bench("cellIDFromLatLng", () => cellIDFromLatLng({ lat: sfLat, lng: sfLng }), 100_000);
+bench("cellIDFromLatLngDegrees", () => cellIDFromLatLngDegrees({ lat: 37.7749, lng: -122.4194 }), 100_000);
 bench("cellIDFromToken", () => cellIDFromToken(sfToken), 100_000);
 bench("toToken", () => toToken(sfCell), 100_000);
 bench("face", () => face(sfCell), 500_000);
@@ -70,13 +70,13 @@ bench("allNeighbors", () => allNeighbors(sfL10, 10), 10_000);
 
 console.log("\n--- CellUnion Operations ---");
 const testIds = Array.from({ length: 100 }, (_, i) =>
-  parentAtLevel(cellIDFromLatLngDegrees(37 + i * 0.01, -122 + i * 0.01), 15),
+  parentAtLevel(cellIDFromLatLngDegrees({ lat: 37 + i * 0.01, lng: -122 + i * 0.01 }), 15),
 );
 bench("cellUnionFromCellIDs (100)", () => cellUnionFromCellIDs(testIds), 10_000);
 bench("normalize (100)", () => normalize(testIds), 10_000);
 
 console.log("\n--- RegionCoverer ---");
-const target = parentAtLevel(cellIDFromLatLngDegrees(37.7749, -122.4194), 8);
+const target = parentAtLevel(cellIDFromLatLngDegrees({ lat: 37.7749, lng: -122.4194 }), 8);
 const region: Region = {
   containsCell: (id: CellID) => contains(target, id),
   mayIntersect: (id: CellID) => contains(target, id) || contains(id, target),

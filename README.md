@@ -5,60 +5,57 @@
 <h1 align="center">@s2js</h1>
 
 <p align="center">
-  <strong>Pure TypeScript S2 Geometry Library for Node.js</strong>
+  <strong>Pure TypeScript S2 Geometry for Node.js</strong>
 </p>
 
 <p align="center">
-  A comprehensive port of Google's <a href="https://s2geometry.io">S2 Geometry Library</a>, matching the <a href="https://github.com/golang/geo">Go reference implementation</a> head to head.
+  Index locations. Find nearby points. Cover regions with cells. No native bindings.
 </p>
 
 <p align="center">
-  <a href="#features">Features</a> &bull;
-  <a href="#packages">Packages</a> &bull;
+  <a href="#install">Install</a> &bull;
+  <a href="#what-is-s2">What is S2</a> &bull;
   <a href="#quick-start">Quick Start</a> &bull;
-  <a href="#why-s2">Why S2</a> &bull;
-  <a href="#api-overview">API Overview</a>
+  <a href="#api">API</a> &bull;
+  <a href="#packages">Packages</a>
 </p>
 
 ---
 
-## Features
+## Install
 
-- **Pure TypeScript** &mdash; no native bindings, no compilation step. Works in Node.js, Deno, Bun, browsers, and edge runtimes.
-- **Full S2 API** &mdash; CellID, CellUnion, Cap, LatLngRect, Loop, Polygon, RegionCoverer, spatial queries, boolean operations, convex hull.
-- **CellID as `bigint`** &mdash; full 64-bit precision for all bit operations (parent, children, level, contains).
-- **Zero runtime dependencies.**
-- **Strict TypeScript** &mdash; branded types for `Angle`, `ChordAngle`, and `CellID` prevent mixing representations at compile time.
+```bash
+npm install @s2js/s2
+```
 
-## Packages
+```bash
+npm install @s2js/earth   # real-world distance utilities
+```
 
-| Package                           | Description                                                 |
-| --------------------------------- | ----------------------------------------------------------- |
-| [`@s2js/r1`](./packages/r1)       | One-dimensional intervals                                   |
-| [`@s2js/r2`](./packages/r2)       | Two-dimensional Cartesian geometry (points, rectangles)     |
-| [`@s2js/r3`](./packages/r3)       | Three-dimensional vectors                                   |
-| [`@s2js/s1`](./packages/s1)       | Angular geometry (angles, chord angles, circular intervals) |
-| [`@s2js/s2`](./packages/s2)       | **Spherical geometry** &mdash; the main package             |
-| [`@s2js/earth`](./packages/earth) | Real-world distance and area conversions                    |
+## What is S2
 
-The dependency graph mirrors the Go library exactly:
+S2 is Google's spherical geometry library. It maps every point on Earth to a 64-bit integer — a **CellID** — by projecting the globe onto a cube and indexing the surface with a Hilbert curve.
+
+The result is a hierarchy of cells at 31 levels of resolution (from 85 million km² at level 0 down to ~1 cm² at level 30):
 
 ```
-@s2js/earth ──▸ @s2js/s1
-@s2js/s2 ────▸ @s2js/s1, @s2js/r1, @s2js/r2, @s2js/r3
-@s2js/s1 ────▸ @s2js/r1
-@s2js/r2 ────▸ @s2js/r1
-@s2js/r3 ────▸ (none)
-@s2js/r1 ────▸ (none)
+level 0  ≈ face of a cube  (85,000,000 km²)
+level 5  ≈ country         (    250,000 km²)
+level 10 ≈ city            (      1,000 km²)
+level 13 ≈ neighbourhood   (          1 km²)
+level 20 ≈ city block      (       1200 m²)
+level 30 ≈ thumbnail       (          1 cm²)
 ```
+
+This gives you three things for free:
+
+- **Spatial indexing** — store CellIDs in any ordered database; nearby places have nearby IDs.
+- **Containment as arithmetic** — `parent.contains(child)` is a prefix check on the integer.
+- **Region covering** — approximate any shape (polygon, cap, corridor) with a small set of cells, then query it as a range scan.
 
 ## Quick Start
 
-```bash
-npm install @s2js/s2 @s2js/earth
-```
-
-### CellID basics
+### Index a location
 
 <embedex source="examples/cellIdBasics.ts">
 
@@ -76,7 +73,7 @@ import {
 } from "@s2js/s2";
 
 // San Francisco
-const cellId = cellIDFromLatLngDegrees(37.7749, -122.4194);
+const cellId = cellIDFromLatLngDegrees({ lat: 37.7749, lng: -122.4194 });
 
 console.log(toToken(cellId)); // leaf cell token
 console.log(face(cellId)); // 4
@@ -100,7 +97,7 @@ console.log(center.lat, center.lng); // degrees
 
 </embedex>
 
-### Spatial containment
+### Check if two places share a cell
 
 <embedex source="examples/spatialContainment.ts">
 
@@ -109,8 +106,8 @@ console.log(center.lat, center.lng); // degrees
 import { cellIDFromLatLngDegrees, contains, parentAtLevel, toToken } from "@s2js/s2";
 
 // Two locations in San Francisco
-const mission = cellIDFromLatLngDegrees(37.7599, -122.4148);
-const soma = cellIDFromLatLngDegrees(37.7785, -122.3892);
+const mission = cellIDFromLatLngDegrees({ lat: 37.7599, lng: -122.4148 });
+const soma = cellIDFromLatLngDegrees({ lat: 37.7785, lng: -122.3892 });
 
 // At leaf level (level 30), they are distinct cells
 console.log(contains(mission, soma)); // false
@@ -132,7 +129,7 @@ console.log(contains(missionL9, soma)); // true
 
 </embedex>
 
-### Region covering
+### Cover a region with cells
 
 <embedex source="examples/regionCovering.ts">
 
@@ -150,7 +147,7 @@ import {
 } from "@s2js/s2";
 
 // Define a region as a level-8 cell (~20km) around Tokyo
-const target = parentAtLevel(cellIDFromLatLngDegrees(35.6762, 139.6503), 8);
+const target = parentAtLevel(cellIDFromLatLngDegrees({ lat: 35.6762, lng: 139.6503 }), 8);
 
 const region: Region = {
   containsCell: (id: CellID) => contains(target, id),
@@ -189,134 +186,127 @@ console.log(`${circumference.toFixed(0)} km`); // ~40030 km
 
 </embedex>
 
-## Why S2
+## API
 
-S2 maps the Earth's surface onto a cube, then uses the **Hilbert curve** to create a one-dimensional index of cells at 31 levels of resolution (from ~10,000km down to ~1cm). This design produces an elegant set of properties:
-
-| Property                    | What it means                                                                               |
-| --------------------------- | ------------------------------------------------------------------------------------------- |
-| **Prefix containment**      | `parent.contains(child)` is a prefix check on the cell ID &mdash; no geometry needed        |
-| **Resolution = truncation** | Lower resolutions are just shorter tokens of the same location                              |
-| **Range scans**             | Nearby cells have numerically close IDs &mdash; spatial queries become database range scans |
-| **Hierarchical**            | Every cell has exactly 4 children and 1 parent, forming a clean quadtree                    |
-| **Uniform**                 | Cell areas at the same level vary by at most a factor of ~2.1                               |
-
-These properties make S2 strictly superior to H3 for indexing, containment, and hierarchical operations &mdash; H3's hexagons can't nest cleanly, so parent-child relationships require lookup tables rather than bit manipulation.
-
-## API Overview
-
-### CellID &mdash; The Core
+### CellID — the core type
 
 ```typescript
-// Construction
-cellIDFromLatLng(latRad, lngRad); // leaf cell from coordinates
-cellIDFromPoint(x, y, z); // leaf cell from unit sphere point
-cellIDFromToken(token); // from hex token string
-cellIDFromFace(face); // face cell (level 0)
-
-// Properties
-face(id); // 0-5
-level(id); // 0-30
-isValid(id) / isLeaf(id) / isFace(id);
+// From geographic coordinates
+cellIDFromLatLngDegrees({ lat: 37.7749, lng: -122.4194 }); // degrees (most common)
+cellIDFromLatLng({ lat: 0.659, lng: -2.136 });             // radians
+cellIDFromPoint(x, y, z);                                  // unit sphere point
+cellIDFromToken("89c25a3");                                // from stored token
 
 // Hierarchy
-parent(id) / parentAtLevel(id, level);
-children(id); // [4 children]
-contains(id, other); // THE elegant property
+parent(id);                    // one level up
+parentAtLevel(id, level);      // jump to any level
+children(id);                  // [4 children]
+contains(id, other);           // THE elegant property — true when other is a descendant
 intersects(id, other);
 
+// Properties
+face(id);   // 0–5
+level(id);  // 0–30
+isLeaf(id); // level === 30
+
 // Traversal
-next(id) / prev(id); // Hilbert curve order
-edgeNeighbors(id); // 4 adjacent cells
-rangeMin(id) / rangeMax(id); // leaf cell range
+next(id) / prev(id);           // Hilbert curve order
+edgeNeighbors(id);             // 4 sharing-edge neighbors
+allNeighbors(id, level);       // all cells at given level that touch this one
+rangeMin(id) / rangeMax(id);   // leaf-cell range for database queries
 
 // Conversion
-toToken(id); // hex string
-toPoint(id); // unit sphere {x, y, z}
-toLatLng(id); // {lat, lng} radians
+toToken(id);           // hex string for storage
+toPoint(id);           // { x, y, z } unit vector
+toLatLng(id);          // { lat, lng } radians
+toLatLngDegrees(id);   // { lat, lng } degrees
 ```
 
 ### Regions
 
 ```typescript
-// CellUnion — normalized set of cells
-cellUnionFromCellIDs(ids);
-cellUnionContains(cu, id) / cellUnionIntersects(cu, id);
-cellUnionUnion(a, b) / cellUnionIntersection(a, b) / cellUnionDifference(a, b);
-
-// Cap — spherical disc
+// Cap — spherical disc (center + angular radius)
 capFromCenterAngle(center, angle);
 capContainsPoint(cap, point);
 capArea(cap);
 
-// LatLngRect — lat/lng rectangle
+// LatLngRect — lat/lng bounding box
 latLngRectFromPointPair(a, b);
-latLngRectContainsLatLng(rect, lat, lng);
+latLngRectContainsLatLng(rect, { lat, lng });
 latLngRectArea(rect);
+
+// CellUnion — normalized set of non-overlapping cells
+cellUnionFromCellIDs(ids);
+cellUnionContains(cu, id);
+cellUnionUnion(a, b) / cellUnionIntersection(a, b) / cellUnionDifference(a, b);
+
+// RegionCoverer — approximate any shape with cells
+covering(region, { maxCells: 8, maxLevel: 15 });
+interiorCovering(region, options);
 ```
 
 ### Geometry
 
 ```typescript
-// Loop — closed boundary on the sphere
-loopFromPoints(vertices);
+// Loop — closed polygon on the sphere
+loopFromPoints(vertices);          // vertices are { x, y, z } unit vectors
 loopContainsPoint(loop, point);
 loopArea(loop);
 
-// Polygon — collection of loops (supports holes)
+// Polygon — loop with optional holes
 polygonFromLoops(loops);
 polygonContainsPoint(polygon, point);
 polygonArea(polygon);
-
-// RegionCoverer — approximate regions with cells
-covering(region, { maxCells: 8, maxLevel: 15 });
-interiorCovering(region, options);
-```
-
-### Queries
-
-```typescript
-// Closest edge
-findClosestEdgeToPoint(loop, target);
-findClosestEdgeInPolygon(polygon, target);
-signedDistanceToLoop(loop, point);
-isDistanceLess(loop, target, limit);
-
-// Boolean operations (cell-based approximation)
-polygonUnionApprox(a, b);
-polygonIntersectionApprox(a, b);
-polygonDifferenceApprox(a, b);
 
 // Convex hull
 convexHull(points);
 ```
 
+### Queries
+
+```typescript
+// Distance
+findClosestEdgeToPoint(loop, target);
+findClosestEdgeInPolygon(polygon, target);
+signedDistanceToLoop(loop, point);   // negative = inside
+isDistanceLess(loop, target, limit);
+
+// Boolean operations (cell-covering approximation)
+polygonUnionApprox(a, b);
+polygonIntersectionApprox(a, b);
+polygonDifferenceApprox(a, b);
+```
+
+## Packages
+
+This is a monorepo. You only need `@s2js/s2` for geographic work — the lower-level packages are for geometric primitives.
+
+| Package | Description |
+| --- | --- |
+| [`@s2js/s2`](./packages/s2) | **Spherical geometry** — CellID, regions, polygons, queries |
+| [`@s2js/earth`](./packages/earth) | Distance and area conversions (km ↔ angle) |
+| [`@s2js/s1`](./packages/s1) | Angular intervals and chord angles |
+| [`@s2js/r3`](./packages/r3) | 3D vectors |
+| [`@s2js/r2`](./packages/r2) | 2D points and rectangles |
+| [`@s2js/r1`](./packages/r1) | 1D intervals |
+
+## Design
+
+- **Functional** — pure functions on immutable data, no classes
+- **No native bindings** — pure TypeScript, runs in Node.js, Deno, Bun, browsers, edge runtimes
+- **Branded types** — `CellID`, `Angle`, and `ChordAngle` are distinct types at compile time; `{ lat, lng }` objects prevent coordinate-swap bugs
+- **Strict TypeScript** — all strict flags including `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess`
+- **ESM-only** — targets Node.js 22+, ES2023
+
 ## Development
 
 ```bash
-# Install
 pnpm install
-
-# Build all packages
-pnpm build
-
-# Run all tests (978 tests)
-pnpm test
-
-# Lint
-pnpm lint
-
-# Type check
+pnpm build       # build all packages
+pnpm test        # run all tests
 pnpm typecheck
+pnpm lint
 ```
-
-## Architecture
-
-- **Functional-first** &mdash; pure functions operating on immutable interfaces, no classes
-- **Branded types** &mdash; `Angle`, `ChordAngle`, and `CellID` are branded to prevent accidental mixing
-- **ESM-only** &mdash; targets Node.js 22+, ES2023
-- **Strict TypeScript** &mdash; all strict flags enabled including `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess`
-- **Monorepo** &mdash; pnpm workspaces + Nx for build orchestration
 
 ## License
 

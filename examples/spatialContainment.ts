@@ -3,8 +3,8 @@
 import { cellIDFromLatLngDegrees, contains, parentAtLevel, toToken } from "@s2js/s2";
 
 // Two locations in San Francisco
-const mission = cellIDFromLatLngDegrees(37.7599, -122.4148);
-const soma = cellIDFromLatLngDegrees(37.7785, -122.3892);
+const mission = cellIDFromLatLngDegrees({ lat: 37.7599, lng: -122.4148 });
+const soma = cellIDFromLatLngDegrees({ lat: 37.7785, lng: -122.3892 });
 
 // At leaf level (level 30), they are distinct cells
 console.log(contains(mission, soma)); // false

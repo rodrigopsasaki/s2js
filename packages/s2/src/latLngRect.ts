@@ -9,6 +9,7 @@
  * @module
  */
 
+import { type LatLng } from "./cellId.js";
 import {
   type Interval as R1Interval,
   addPoint as r1AddPoint,
@@ -72,10 +73,9 @@ export function fullLatLngRect(): LatLngRect {
 /**
  * Creates a LatLngRect containing a single point.
  *
- * @param lat - Latitude in radians
- * @param lng - Longitude in radians
+ * @param ll - The point as `{ lat, lng }` in radians
  */
-export function latLngRectFromLatLng(lat: number, lng: number): LatLngRect {
+export function latLngRectFromLatLng({ lat, lng }: LatLng): LatLngRect {
   return {
     lat: { lo: lat, hi: lat },
     lng: { lo: lng, hi: lng },
@@ -89,10 +89,7 @@ export function latLngRectFromLatLng(lat: number, lng: number): LatLngRect {
  * @param a - First point as `{ lat, lng }` in radians
  * @param b - Second point as `{ lat, lng }` in radians
  */
-export function latLngRectFromPointPair(
-  a: { readonly lat: number; readonly lng: number },
-  b: { readonly lat: number; readonly lng: number },
-): LatLngRect {
+export function latLngRectFromPointPair(a: LatLng, b: LatLng): LatLngRect {
   const lat = r1IntervalFromPointPair(a.lat, b.lat);
   // For longitude we need to handle wrapping. Use s1.addPoint.
   let lng = s1EmptyInterval();
@@ -131,10 +128,9 @@ export function isFullLatLngRect(r: LatLngRect): boolean {
  * Returns true if the rectangle contains the given lat/lng point.
  *
  * @param r - The rectangle
- * @param lat - Latitude in radians
- * @param lng - Longitude in radians
+ * @param ll - The point as `{ lat, lng }` in radians
  */
-export function latLngRectContainsLatLng(r: LatLngRect, lat: number, lng: number): boolean {
+export function latLngRectContainsLatLng(r: LatLngRect, { lat, lng }: LatLng): boolean {
   return r1Contains(r.lat, lat) && s1Contains(r.lng, lng);
 }
 
@@ -196,10 +192,9 @@ export function latLngRectIntersection(a: LatLngRect, b: LatLngRect): LatLngRect
  * Returns the rectangle expanded to include the given lat/lng point.
  *
  * @param r - The rectangle to expand
- * @param lat - Latitude in radians
- * @param lng - Longitude in radians
+ * @param ll - The point as `{ lat, lng }` in radians
  */
-export function latLngRectAddLatLng(r: LatLngRect, lat: number, lng: number): LatLngRect {
+export function latLngRectAddLatLng(r: LatLngRect, { lat, lng }: LatLng): LatLngRect {
   return {
     lat: r1AddPoint(r.lat, lat),
     lng: s1AddPoint(r.lng, lng),
