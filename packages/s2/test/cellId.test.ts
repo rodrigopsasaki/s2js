@@ -260,7 +260,7 @@ describe("s2.CellID", () => {
       ];
 
       for (const { lat, lng } of testCases) {
-        const id = cellIDFromLatLng({ lat: lat, lng: lng });
+        const id = cellIDFromLatLng({ lat, lng });
         const { lat: lat2, lng: lng2 } = toLatLng(id);
 
         // At leaf level, cell center offset is within ~1e-9 radians (~6mm)
